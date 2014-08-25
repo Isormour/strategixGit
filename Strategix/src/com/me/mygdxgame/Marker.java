@@ -10,11 +10,11 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Vector2;
-
+import com.me.mygdxgame.Direction;
 
 public class Marker {
-int x,y;
-int sterownik = 0;
+BoardPosition position;
+Direction sterownik = Direction.DOWN;
 Person Target;
 Texture ground;
 Texture arrow;
@@ -23,14 +23,12 @@ Texture menu;
 Texture pointer;
 Texture Tex_move;
 Texture Tex_attack;
-List<Tile> listaAttack = new ArrayList<Tile>();
-List<Tile> listaMove = new ArrayList<Tile>();
+Tile[] listaAttack;
+Tile[] listaMove;
+BitmapFont font = new BitmapFont(false);
 
-
-float isoX;
-float isoY;
-int strzalka = 0 ;
-float time=0;
+Direction strzalka = Direction.DOWN;
+float time = 0;
 int frames = 0;
 float delay = 0.06f;
 
@@ -46,20 +44,9 @@ int pozycjaPointera = 1;
 SoftReference<Person> champion;
 Person Tester1;
 
-public void set_champ(Person champ)
+public Marker(int x, int y, Texture ground, Texture arrow, Texture[] strzalki, Texture Menu, Texture pointer, Texture attack, Texture tex_move)
 {
-	champion = new SoftReference<Person>(champ);
-	
-}
-private void ToIso()
-{
-    this.isoX = x*32 - y*32 ;
-    this.isoY = ((x*32 + y*32) / 2);
-}
-public Marker(int x,int y,Texture ground,Texture arrow, Texture[] strzalki,Texture Menu,Texture pointer,Texture attack,Texture tex_move)
-{
-	this.x=x;
-	this.y=y;
+	this.position = new BoardPosition(x, y);
 	this.arrow = arrow;
 	this.ground = ground;
 	this.strzalki = strzalki;
@@ -67,61 +54,50 @@ public Marker(int x,int y,Texture ground,Texture arrow, Texture[] strzalki,Textu
 	this.pointer  = pointer;
 	this.Tex_attack = attack;
 	this.Tex_move = tex_move;
-	ToIso();
+}
+
+public void set_champ(Person champ)
+{
+	champion = new SoftReference<Person>(champ);
 	
 }
+
 public void dispose()
 {
 	ground.dispose();
 	arrow.dispose();
 }
 //Move
-public void move(int kierunek)
+public void move(Direction kierunek)
 {
 	if(champion == null)
 	{
-	switch (kierunek)
-    {//ruch po planszy
-	case 0:
-		y--;
-		break;
-	case 1:
-		x--;
-		break;
-	case 2:
-		x++;
-		break;
-	case 3:
-		y++;
-		break;
-	
-    }
-	ToIso();
+		position.move(kierunek);
 	}
 	else
 	{
-		
 		if(menuON){
 			switch (kierunek)
 			{
-			case 1:
-			{
-				pozycjaPointera++;
-				if(pozycjaPointera>3)
+			case DOWN:
 				{
-				pozycjaPointera = 1;
+					pozycjaPointera++;
+					if(pozycjaPointera>3)
+					{
+					pozycjaPointera = 1;
+					}
 				}
-			break;
-			}
-			case 2:
-			{	pozycjaPointera--;
-				if(pozycjaPointera<1)
-				{
-				pozycjaPointera = 3;
+				break;
+			case UP:
+				{	
+					pozycjaPointera--;
+					if(pozycjaPointera<1)
+					{
+					pozycjaPointera = 3;
+					}
 				}
-			
-			break;}
-			
+		    default:
+		    	break;
 			}
 		}
 		if(attacking||moving)
@@ -130,42 +106,25 @@ public void move(int kierunek)
 		}
 		if(kierunki)
 		{// wybor strzalki
-			switch (kierunek)
-		    {
-			case 0:
-				strzalka= 0;
-				break;
-			case 1:
-				strzalka= 1;
-				break;
-			case 2:
-				strzalka= 2;
-				break;
-			case 3:
-				strzalka= 3;
-				break;
-			
-		    }
+			strzalka = kierunek;
 		}
-	}}
-public void draw(SpriteBatch spriteBatch,float timer)
-{
-	if(champion ==null)draw_standing_animation(spriteBatch, timer, ground,isoX,isoY);
-	if(attacking)draw_Tile(spriteBatch, 0);
-	if(moving)draw_Tile(spriteBatch, 1);
+	}
 }
+
+public void draw(SpriteBatch spriteBatch, float timer)
+{
+	if(champion == null)draw_standing_animation(spriteBatch, timer, ground, position.getIsoX(), position.getIsoY());
+	if(attacking) draw_Tile(spriteBatch, 0);
+	if(moving) draw_Tile(spriteBatch, 1);
+}
+
 //draw
 public void draw_Interface(SpriteBatch spriteBatch,float timer)
 {
-	
-	
-	
 	if(menuON)
 	{
-		draw_arrow(spriteBatch, timer, arrow,champion.get().isoX+16 ,champion.get().isoY+64);
+		draw_arrow(spriteBatch, timer, arrow, champion.get().position.getIsoX()+16, champion.get().position.getIsoY()+64);
 		draw_menu(spriteBatch);
-		
-		
 	}
 	if(kierunki)
 	{
@@ -174,126 +133,76 @@ public void draw_Interface(SpriteBatch spriteBatch,float timer)
 	if(moving)
 	{
 		Tile tTile;
-		switch (sterownik)
-	    {
-
-		case 0:
-			tTile = listaMove.get(1);
-			draw_arrow(spriteBatch, timer, arrow,tTile.isoX+16 ,tTile.isoY+32);
-			break;
-		case 1:
-			tTile = listaMove.get(0);
-			draw_arrow(spriteBatch, timer, arrow,tTile.isoX+16 ,tTile.isoY+32);
-			break;
-		case 2:
-			tTile = listaMove.get(2);
-			draw_arrow(spriteBatch, timer, arrow,tTile.isoX+16 ,tTile.isoY+32);
-			break;
-		case 3:
-
-			tTile = listaMove.get(3);
-			draw_arrow(spriteBatch, timer, arrow,tTile.isoX+16 ,tTile.isoY+32);
-			break;
-			
+		tTile = listaMove[sterownik.toInt()];
+		draw_arrow(spriteBatch, timer, arrow, tTile.isoX+16, tTile.isoY+32);
+	return;
 	}
-		return;}
 	if(attacking)
-	{ Tile tTile;
-		switch (sterownik)
-	    {
-
-		case 0:
-			tTile = listaAttack.get(1);
-			draw_arrow(spriteBatch, timer, arrow,tTile.isoX+16 ,tTile.isoY+32);
-			break;
-		case 1:
-			tTile = listaAttack.get(0);
-			draw_arrow(spriteBatch, timer, arrow,tTile.isoX+16 ,tTile.isoY+32);
-			break;
-		case 2:
-			tTile = listaAttack.get(2);
-			draw_arrow(spriteBatch, timer, arrow,tTile.isoX+16 ,tTile.isoY+32);
-			break;
-		case 3:
-
-			tTile = listaAttack.get(3);
-			draw_arrow(spriteBatch, timer, arrow,tTile.isoX+16 ,tTile.isoY+32);
-			break;
-		
-	    }
-		
-		
-	}
-	
-	
-}
-private void draw_standing_animation(SpriteBatch spriteBatch,float timer,Texture tex2,float isoX,float IsoY)
-	{
-	 	
-	    	time +=timer;
-	
-	    	if(time >delay)
-	    	{
-	    		frames++;
-	    		time = 0;
-	    	}
-	    	
-	    	spriteBatch.draw(tex2, isoX, isoY,64*frames,0, 64, 32);
-	    	if(frames==9)
-	    	{
-	    		time = 0;
-	    		frames= 0;
+	{ 
+		Tile tTile;
+		tTile = listaAttack[sterownik.toInt()];
+		draw_arrow(spriteBatch, timer, arrow, tTile.isoX+16, tTile.isoY+32);
 	}
 }
-private void draw_arrow(SpriteBatch spriteBatch,float timer,Texture tex2,float isoX,float isoY)
+
+private void draw_standing_animation(SpriteBatch spriteBatch, float timer, Texture tex2, float isoX, float isoY)
+{
+	time +=timer;
+	
+	if(time >delay)
 	{
-	
-	
-    	aTime +=timer;
-
-    	if(aTime >0.07f)
-    	{
-    		aFrames++;
-    		aTime = 0;
-    	}
-    	
-    	spriteBatch.draw(tex2, isoX, isoY,32*aFrames,0, 32, 64);
-    	if(aFrames==9)
-    	{
-    		aTime = 0;
-    		aFrames= 0;
-    	}
-
+		frames++;
+		time = 0;
 	}
+	spriteBatch.draw(tex2, isoX, isoY, 64*frames, 0, 64, 32);
+	if(frames==9)
+	{
+		time = 0;
+		frames= 0;
+	}
+}
+
+private void draw_arrow(SpriteBatch spriteBatch, float timer, Texture tex2, float isoX, float isoY)
+{
+	aTime +=timer;
+
+	if(aTime > 0.07f)
+	{
+		aFrames++;
+		aTime = 0;
+	}
+	spriteBatch.draw(tex2, isoX, isoY, 32*aFrames, 0, 32, 64);
+	
+	if(aFrames==9)
+	{
+		aTime = 0;
+		aFrames = 0;
+	}
+}
+
 private void draw_menu(SpriteBatch spriteBatch)
 {
 	if(menuON){
 	spriteBatch.draw(menu,240,140);
-	
 	spriteBatch.draw(pointer,260, 140+menu.getHeight()-30-pozycjaPointera*20);
-	BitmapFont font = new BitmapFont(false);
 	font.draw(spriteBatch,"atack ", 300, 140+menu.getHeight()-30);
 	font.draw(spriteBatch,"move ", 300, 140+menu.getHeight()-50);
 	font.draw(spriteBatch,"end ", 300, 140+menu.getHeight()-70);
-	font.draw(spriteBatch," menu numer"+pozycjaPointera, 240, 20);
+	font.draw(spriteBatch,"menu numer "+pozycjaPointera, 240, 20);
 	}	
 }
-//Approve
+
 public void approve(Person tester)
 {
 	if(champion==null)
 	{// u¿ycie przycisku U na planszy
-			if(x ==tester.x)
-			{
-			if(y == tester.y)
-			{
-				tester.set_animation(1);
-				tester.busy = true;
-				tester.selected = true;
-				set_champ(tester);
-				menuON = true;
-				
-			}
+		if(position.sameAs(tester.position))
+		{
+			tester.set_animation(1);
+			tester.busy = true;
+			tester.selected = true;
+			set_champ(tester);
+			menuON = true;
 		}
 	}
 	if(kierunki)
@@ -304,7 +213,6 @@ public void approve(Person tester)
 	}
 	if(menuON)
 	{
-		
 		switch (pozycjaPointera)
 	    {
 		case 1:
@@ -313,21 +221,19 @@ public void approve(Person tester)
 			{ 	
 				if(!tester.attacked)
 				{
-					attacking= true;
+					attacking = true;
 					menuON = false;
 					Make_AList();
 				}
 			}
 			break;
 		case 2:
-		
 			if(!tester.moved){
 				if(!tester.busy)
 				{
-					moving= true;
-					menuON= false;
+					moving = true;
+					menuON = false;
 					Make_Mlist();
-					
 				}
 			}
 			break;
@@ -335,38 +241,14 @@ public void approve(Person tester)
 			// end
 			kierunki  = true;
 			menuON = false;
-			listaAttack.clear();
-			listaMove.clear();
-			
 			break;
-			
-		
 	    }
-	return;}
+		return;
+	}
 	if (moving)
 	{
-		switch (sterownik)
-	    {
-
-		case 0:
-			tester.kierunek = 0;
-			y--;
-			break;
-		case 1:
-			x--;
-			tester.kierunek = 1;
-			break;
-		case 2:
-			x++;
-			tester.kierunek = 2;
-			break;
-		case 3:
-			y++;
-			tester.kierunek = 3;
-			break;
-		
-	    }
-		ToIso();
+		position.move(sterownik);
+		tester.kierunek = sterownik;
 		moving = false;
 		tester.moved = true;
 		menuON = true;
@@ -375,23 +257,7 @@ public void approve(Person tester)
 	}
 	if(attacking)
 	{
-		switch (sterownik)
-	    {
-
-		case 0:
-			tester.kierunek = 0;
-			break;
-		case 1:
-			tester.kierunek = 1;
-			break;
-		case 2:
-			tester.kierunek = 2;
-			break;
-		case 3:
-			tester.kierunek = 3;
-			break;
-		
-	    }
+		tester.kierunek = sterownik;
 		attacking = false;
 		tester.attacked = true;
 		menuON = true;
@@ -400,105 +266,76 @@ public void approve(Person tester)
 	}
 
 }
+
 private void reset(Person tester)
 {
-	
 	champion = null;
 	tester.selected = false;
 	tester.endTurn();
 	pozycjaPointera = 1;
 	kierunki = false;
 }
+
 private void draw_strzalki(SpriteBatch spriteBatch)
 {
 	int correctorX = 8;
 	int correctorY = 8;
 	Vector2 nadglowa = new Vector2(24,48);
+	int isoX = position.getIsoX();
+	int isoY = position.getIsoY();
 	
-	if(strzalka  == 0){spriteBatch.draw(strzalki[1], isoX+correctorX+nadglowa.x, isoY-correctorY-1+nadglowa.y);}
+	if(strzalka == Direction.DOWN){spriteBatch.draw(strzalki[1], isoX+correctorX+nadglowa.x, isoY-correctorY-1+nadglowa.y);}
 	else{spriteBatch.draw(strzalki[1+4], isoX+correctorX+nadglowa.x, isoY-correctorY+nadglowa.y);}
-	if(strzalka  == 1){spriteBatch.draw(strzalki[0], isoX-correctorX+nadglowa.x, isoY-correctorY-1+nadglowa.y);}
+	if(strzalka == Direction.LEFT){spriteBatch.draw(strzalki[0], isoX-correctorX+nadglowa.x, isoY-correctorY-1+nadglowa.y);}
 	else{spriteBatch.draw(strzalki[0+4], isoX-correctorX+nadglowa.x, isoY-correctorY+nadglowa.y);}
-	if(strzalka == 2){spriteBatch.draw(strzalki[2], isoX+correctorX+nadglowa.x, isoY+correctorY-1+nadglowa.y);}
+	if(strzalka == Direction.RIGHT){spriteBatch.draw(strzalki[2], isoX+correctorX+nadglowa.x, isoY+correctorY-1+nadglowa.y);}
 	else{spriteBatch.draw(strzalki[2+4], isoX+correctorX+nadglowa.x, isoY+correctorY+nadglowa.y);}
-	if(strzalka  ==3){spriteBatch.draw(strzalki[3], isoX-correctorX+nadglowa.x, isoY+correctorY-1+nadglowa.y);}
+	if(strzalka == Direction.UP){spriteBatch.draw(strzalki[3], isoX-correctorX+nadglowa.x, isoY+correctorY-1+nadglowa.y);}
 	else{spriteBatch.draw(strzalki[3+4], isoX-correctorX+nadglowa.x, isoY+correctorY+nadglowa.y);}
-	
-		
 }
+
+private Tile[] makeTiles(Texture tex) {
+	Tile[] tiles = new Tile[4]; // list size is the number of directions
+	int x,y;
+	x = champion.get().position.getX();
+	y = champion.get().position.getY();
+	tiles[Direction.RIGHT.toInt()] = new Tile((x+1), (y), tex); //Right
+	tiles[Direction.DOWN.toInt()] = new Tile((x), (y-1), tex); //Down
+	tiles[Direction.UP.toInt()] = new Tile((x), (y+1), tex); //Up
+	tiles[Direction.LEFT.toInt()] = new Tile((x-1), (y), tex); //Left
+	return tiles;
+}
+
 private void Make_AList()
 {
-	Tile tTile;
-	int x,y;
-	x = champion.get().x;
-	y = champion.get().y;
-	//W=2
-    //S=1
-	//A=3
-	//D=0
-	tTile = new Tile((x-1),(y),Tex_attack);
-	listaAttack.add(tTile);
-	tTile = new Tile((x),(y-1),Tex_attack);
-	listaAttack.add(tTile);
-	tTile = new Tile((x+1),(y),Tex_attack);
-	listaAttack.add(tTile);
-	tTile = new Tile((x),(y+1),Tex_attack);
-	listaAttack.add(tTile);
-	
+	listaAttack = makeTiles(Tex_attack);
 }
+
 private void Make_Mlist()
 {
-	
-		Tile tTile;
-		int x,y;
-		x = champion.get().x;
-		y = champion.get().y;
-		//W=2
-	    //S=1
-		//A=3
-		//D=0
-		tTile = new Tile((x-1),(y),Tex_move);
-		listaMove.add(tTile);
-		tTile = new Tile((x),(y-1),Tex_move);
-		listaMove.add(tTile);
-		tTile = new Tile((x+1),(y),Tex_move);
-		listaMove.add(tTile);
-		tTile = new Tile((x),(y+1),Tex_move);
-		listaMove.add(tTile);
-		
-	}
+	listaMove = makeTiles(Tex_move);
+}
+
 private void draw_Tile(SpriteBatch spriteBatch, int numer)
 {
 	switch (numer)
     {
-
 	case 0:
-		for(int i =0;i<listaAttack.size();i++)
+		for(int i = 0; i < listaAttack.length; i++)
 		{
-			listaAttack.get(i).draw(spriteBatch);
+			listaAttack[i].draw(spriteBatch);
 		}
 		break;
 	case 1:
-		for(int i =0;i<listaMove.size();i++)
+		for(int i = 0; i<listaMove.length; i++)
 		{
-			listaMove.get(i).draw(spriteBatch);
+			listaMove[i].draw(spriteBatch);
 		}
+	default:
 		break;
-	case 2:
-	
-		break;
-	case 3:
-	
-		break;
-	
     }   
- }
-private void drawMove(SpriteBatch spriteBatch)
-	{
-	for(int i = 0 ;i<listaAttack.size();i++)
-	{	
-	listaMove.get(i).draw(spriteBatch);}
-	}
+}
+
 }
 
 

@@ -8,36 +8,47 @@ public class Camera {
 	OrthographicCamera camera;
 	Vector3 position;
 	boolean updated = false;
+	
 	Camera(float width,float height)
 	{
 		camera = new OrthographicCamera(width, height);
 		position = new Vector3(width, height, 0);
         camera.update();
         camera.apply(Gdx.gl10);
-
 	}
-	public void ruchscreena(int sterownik)
-    {
-        switch (sterownik)
+	
+	/**
+	 * Moves the camera by specified amount of pixels in a given direction.
+	 * @param dir Direction of movement.
+	 * @param pixels Number of pixels for displacement.
+	 */
+	public void ruchscreena(Direction dir, int pixels) {
+        switch (dir)
         {
-            case 1:
-            	position.y += 1;
+            case UP:
+            	position.y += pixels;
                 break;
-
-            case 2:
-            	position.y -= 1;
+            case DOWN:
+            	position.y -= pixels;
                 break;
-
-            case 3:
-            	position.x += 1;
+            case RIGHT:
+            	position.x += pixels;
                 break;
-
-            case 4:
-            	position.x -= 1;
+            case LEFT:
+            	position.x -= pixels;
                 break;
         }
         camera.position.set(position);
         camera.update();
         camera.apply(Gdx.gl10);
+	}
+	
+	/**
+	 * Moves the camera by a pixel in a given direction.
+	 * @param pixels Number of pixels for displacement.
+	 */	
+	public void ruchscreena(Direction dir)
+    {
+		this.ruchscreena(dir, 1);
     }	
 }

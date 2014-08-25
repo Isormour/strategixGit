@@ -7,14 +7,11 @@ import com.sun.org.apache.xpath.internal.axes.WalkerFactory;
 
 
 public class Person {
-	int x,y;
-	
-	int kierunek =0;
+	BoardPosition position;
+	Direction kierunek = Direction.RIGHT;
     int frames = 0;
     int rows = 0;
-    int animation =0;
-   
-    
+    int animation = 0;
  
     boolean selected = false;
     boolean busy= false;
@@ -22,154 +19,118 @@ public class Person {
     boolean attacked = false;
     boolean moved = false;
     
-    int attack_corrector=0;
+    int attack_corrector = 0;
     int dodatek = 1;
     
-    float timer=0;
-    float delay=0.04f;
+    float timer = 0;
+    float delay = 0.04f;
     float atackcorr = 1;
     float atack_dodatek;
-  
     
-	float isoX,isoY;
 	Texture tex_greet;
 	Texture tex_atack;
 	Texture tex_death;
 	Texture tex_walk;
 	
-	
-    Person(int x,int y,Texture greet,Texture atack,Texture death,Texture walk)
+    Person(int x, int y, Texture greet, Texture atack, Texture death, Texture walk)
     {
-    	this.x=x;
-    	this.y=y;
+    	this.position = new BoardPosition(x, y);
     	this.tex_greet = greet;
     	this.tex_atack = atack;
     	this.tex_death = death;
     	this.tex_walk = walk;
-    	
-    	
-    	ToIso();
-    	
-    	
-    	
     }
-    private void ToIso()
+
+    private void draw_death(SpriteBatch spriteBatch, float time, Texture death)
     {
-        this.isoX = x*32 - y*32;
-        this.isoY = ((x*32 + y*32) / 2);
-    }
-    private void draw_death(SpriteBatch spriteBatch,float time,Texture death)
-{
-	timer +=time;
-	busy = true;
-	if(timer >delay)
-	{
-		frames++;
-		timer = 0;
+		timer += time;
+		busy = true;
+		if(timer >delay)
+		{
+			frames++;
+			timer = 0;
+		}
+		spriteBatch.draw(death, position.getIsoX(), position.getIsoY(), 64*frames, 64*kierunek.toInt(), 64, 64);
+		if(frames==9)
+		{
+			busy = false;
+			timer = 0;
+			frames= 0;
+			animation = 5;
+		}
 	}
-	
-	spriteBatch.draw(death, isoX, isoY,64*frames,64*kierunek, 64, 64);
-	if(frames==9)
-	{
-		busy = false;
-		timer = 0;
-		frames= 0;
-		animation =5;
-		
-	}
-	
-}
-    private void draw_standing_Animation(SpriteBatch spriteBatch,float time ,Texture tex2)
+    
+    private void draw_standing_Animation(SpriteBatch spriteBatch, float time, Texture tex2)
     { 	
-    	timer +=time;
+    	timer += time;
     	busy = true;
-    	if(timer >delay)
+    	if(timer > delay)
     	{
     		frames++;
     		timer = 0;
     	}
-    	
-    	spriteBatch.draw(tex2, isoX, isoY,64*frames,64*kierunek, 64, 64);
-    	if(frames==9)
+		spriteBatch.draw(tex2, position.getIsoX(), position.getIsoY(), 64*frames, 64*kierunek.toInt(), 64, 64);
     	{
     		busy = false;
     		timer = 0;
     		frames= 0;
-    		animation =0;
-    		
+    		animation = 0;
     	}
     }
-    private void draw_walk(SpriteBatch spriteBatch,float time,Texture tex2)
+    
+    private void draw_walk(SpriteBatch spriteBatch, float time, Texture tex)
     {
-    	timer +=time;
-    	busy = true;	
-    	 switch (kierunek)
-         {
-    	 //W=2
-         //S=1
-    	 //A=3
-    	 //D=0
-    	 case 0:
-    		
-    		 spriteBatch.draw(tex2, isoX + frames * 1.6f +  16*(rows),  isoY - frames * 0.8f - 8*(rows), 64*frames, 64 * (kierunek * 2)+64*rows, 64, 64);
-    		 break;
-    	 case 1:
-    		
-    		 spriteBatch.draw(tex2, isoX - frames * 1.6f -  16*(rows),  isoY - frames * 0.8f - 8*(rows), 64*frames, 64 * (kierunek * 2)+64*rows, 64, 64);
-    		 break;
-    	 case 2:
-    		 spriteBatch.draw(tex2, isoX + frames * 1.6f +  16*(rows),  isoY +frames * 0.8f + 8*(rows), 64*frames, 64 * (kierunek * 2)+64*rows, 64, 64);
-    		 break;
-    	 case 3:
-    		 spriteBatch.draw(tex2, isoX - frames * 1.6f -  16*(rows),  isoY + frames * 0.8f + 8*(rows), 64*frames, 64 * (kierunek * 2)+64*rows, 64, 64);
-    		 break;
-    		 
-         }
-    		if(timer >delay)
-        	{
-        		frames++;
-        		timer = 0;
-        	}
-        	if(rows==1&&frames==9)
-    		{
-    			
-        		timer = 0;
-        		frames= 0;
-        		animation =0;
-        		rows --;
-        		busy = false;
-        		moved = true;
-        		switch (kierunek)
-                {
-        		case 0:
-        			y--;
-        			break;
-        		case 1:
-        			x--;
-            		break;
-        		case 2:
-        			x++;
-            		break;
-        		case 3:
-        			y++;
-            		break;
-        		
-                }
-        		ToIso();
-        		
-        		
-    		}
-        	if(frames==9)
-        	{
-        		frames=0;
-        		rows ++;
-        	}
+    	int isoX = position.getIsoX();
+    	int isoY = position.getIsoY();
+    	timer += time;
+		busy = true;	
+		switch (kierunek)
+		{
+			case DOWN:
+				 spriteBatch.draw(tex, isoX + frames * 1.6f + 16*(rows),  isoY - frames * 0.8f - 8*(rows), 64*frames, 64 * (kierunek.toInt() * 2)+64*rows, 64, 64);
+				 break;
+			case LEFT:
+				 spriteBatch.draw(tex, isoX - frames * 1.6f - 16*(rows),  isoY - frames * 0.8f - 8*(rows), 64*frames, 64 * (kierunek.toInt() * 2)+64*rows, 64, 64);
+				 break;
+			case RIGHT:
+				 spriteBatch.draw(tex, isoX + frames * 1.6f + 16*(rows),  isoY + frames * 0.8f + 8*(rows), 64*frames, 64 * (kierunek.toInt() * 2)+64*rows, 64, 64);
+				 break;
+			case UP:
+				 spriteBatch.draw(tex, isoX - frames * 1.6f - 16*(rows),  isoY + frames * 0.8f + 8*(rows), 64*frames, 64 * (kierunek.toInt() * 2)+64*rows, 64, 64);
+				 break;
+		}
+		
+		if(timer > delay)
+		{
+			frames++;
+			timer = 0;
+		}
+		
+		if(rows==1 && frames==9)
+		{
+			
+			timer = 0;
+			frames = 0;
+			animation = 0;
+			rows --;
+			busy = false;
+			moved = true;
+			position.move(kierunek);
+		}
+		if(frames==9)
+		{
+			frames=0;
+			rows ++;
+		}
     }
-    private void draw_atack(SpriteBatch spriteBatch,float time,Texture tex2)
+    
+    private void draw_atack(SpriteBatch spriteBatch, float time, Texture tex2)
     {
-    	timer +=time;
+    	int isoX = position.getIsoX();
+    	int isoY = position.getIsoY();
+    	timer += time;
     	busy = true;
-    	if(timer >delay)
+    	if(timer > delay)
     	{
     		frames++;
     		timer = 0;
@@ -180,38 +141,39 @@ public class Person {
     		dodatek = dodatek * (-1);
     	}
     	switch(kierunek){
-      case 0:
-		 spriteBatch.draw(tex2, isoX + 1.6f * attack_corrector,  isoY - 1.6f * attack_corrector, 64*frames, 64 * kierunek , 64, 64);
-		 break;
-	  case 1:
-		 spriteBatch.draw(tex2, isoX - 1.6f * attack_corrector,  isoY - 1.6f * attack_corrector, 64*frames, 64 * kierunek , 64, 64);
-		 break;
-	  case 2:
-		 spriteBatch.draw(tex2, isoX + 1.6f * attack_corrector,  isoY +1.6f * attack_corrector, 64*frames, 64 * kierunek, 64, 64);
-		 break;
-	  case 3:
-		 spriteBatch.draw(tex2, isoX - 1.6f * attack_corrector,  isoY + 1.6f * attack_corrector, 64*frames, 64 * kierunek, 64, 64);
-		 break;
-		 }
+			case LEFT:
+				spriteBatch.draw(tex2, isoX + 1.6f * attack_corrector,  isoY - 1.6f * attack_corrector, 64*frames, 64 * kierunek.toInt(), 64, 64);
+				break;
+			case DOWN:
+				spriteBatch.draw(tex2, isoX - 1.6f * attack_corrector,  isoY - 1.6f * attack_corrector, 64*frames, 64 * kierunek.toInt(), 64, 64);
+				break;
+			case UP:
+				spriteBatch.draw(tex2, isoX + 1.6f * attack_corrector,  isoY + 1.6f * attack_corrector, 64*frames, 64 * kierunek.toInt(), 64, 64);
+				break;
+			case RIGHT:
+				spriteBatch.draw(tex2, isoX - 1.6f * attack_corrector,  isoY + 1.6f * attack_corrector, 64*frames, 64 * kierunek.toInt(), 64, 64);
+				break;
+		}
     	if(frames==9)
     	{
     		busy = false;
     		timer = 0;
-    		frames= 0;
-    		animation =0;
-    		
-    		attack_corrector=0;
+    		frames = 0;
+    		animation = 0;
+    		attack_corrector = 0;
     		dodatek = 1;
     		attacked = true;
     	}
     }
+    
     // PUBLIC FUNCTIONS 
     public void endTurn()
     {
     	moved = false;
     	attacked = false;
     }
-    public void set_kierunek(int kierunek)
+    
+    public void set_kierunek(Direction kierunek)
     {
     	if(!busy)
     	{
@@ -219,28 +181,30 @@ public class Person {
     		
     	}
     }
+    
     public void set_animation(int animation_number)
     {
     	if(!busy)
     	{
     		animation = animation_number;
-    		
     	}
     }
-    public void draw(SpriteBatch spriteBatch,float time)
+    
+    public void draw(SpriteBatch spriteBatch, float time)
     {
-    	
+    	int isoX = position.getIsoX();
+    	int isoY = position.getIsoY();
     	if (animation == 0)
         {
-    		spriteBatch.draw(tex_greet, isoX, isoY,64*frames,64*kierunek, 64, 64);
+    		spriteBatch.draw(tex_greet, isoX, isoY, 64*frames, 64*kierunek.toInt(), 64, 64);
         }
         else if (animation == 1)
         {
-        	draw_standing_Animation(spriteBatch, time,tex_greet);
+        	draw_standing_Animation(spriteBatch, time, tex_greet);
         }
         else if(animation == 2)
         {
-        	draw_atack(spriteBatch, time,tex_atack);
+        	draw_atack(spriteBatch, time, tex_atack);
         }
         else if(animation == 3)
         {
@@ -248,13 +212,14 @@ public class Person {
         }
         else if(animation == 4)
         {
-        	draw_walk(spriteBatch, time,tex_walk);
+        	draw_walk(spriteBatch, time, tex_walk);
         }
         else if(animation == 5)
         {
-        	spriteBatch.draw(tex_death, isoX, isoY,64*9,64*kierunek, 64, 64);
+        	spriteBatch.draw(tex_death, isoX, isoY, 64*9, 64*kierunek.toInt(), 64, 64);
         }
     }
+    
     public void dispose()
     {
     	tex_atack.dispose();
