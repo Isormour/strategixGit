@@ -3,6 +3,7 @@ package com.me.mygdxgame;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.sun.org.apache.xpath.internal.axes.WalkerFactory;
 
 
@@ -32,6 +33,8 @@ public class Person {
 	Texture tex_death;
 	Texture tex_walk;
 	
+	SpriteAnimation currentAnimation;
+	
     Person(int x, int y, Texture greet, Texture atack, Texture death, Texture walk)
     {
     	this.position = new BoardPosition(x, y);
@@ -41,6 +44,36 @@ public class Person {
     	this.tex_walk = walk;
     }
 
+    public void draw(SpriteBatch spriteBatch, float time)
+    {
+    	float isoX = position.getIsoX();
+    	float isoY = position.getIsoY();
+    	if (animation == 0)
+        {
+    		spriteBatch.draw(tex_greet, isoX, isoY, 64*frames, 64*kierunek.toInt(), 64, 64);
+        }
+        else if (animation == 1)
+        {
+        	draw_standing_Animation(spriteBatch, time, tex_greet);
+        }
+        else if(animation == 2)
+        {
+        	draw_atack(spriteBatch, time, tex_atack);
+        }
+        else if(animation == 3)
+        {
+        	draw_death(spriteBatch, time, tex_death);
+        }
+        else if(animation == 4)
+        {
+        	draw_walk(spriteBatch);
+        }
+        else if(animation == 5)
+        {
+        	spriteBatch.draw(tex_death, isoX, isoY, 64*9, 64*kierunek.toInt(), 64, 64);
+        }
+    }
+    
     private void draw_death(SpriteBatch spriteBatch, float time, Texture death)
     {
 		timer += time;
@@ -55,7 +88,7 @@ public class Person {
 		{
 			busy = false;
 			timer = 0;
-			frames= 0;
+			frames = 0;
 			animation = 5;
 		}
 	}
@@ -78,56 +111,39 @@ public class Person {
     	}
     }
     
-    private void draw_walk(SpriteBatch spriteBatch, float time, Texture tex)
+    private void draw_walk(SpriteBatch spriteBatch)
     {
-    	int isoX = position.getIsoX();
-    	int isoY = position.getIsoY();
-    	timer += time;
-		busy = true;	
-		switch (kierunek)
-		{
-			case DOWN:
-				 spriteBatch.draw(tex, isoX + frames * 1.6f + 16*(rows),  isoY - frames * 0.8f - 8*(rows), 64*frames, 64 * (kierunek.toInt() * 2)+64*rows, 64, 64);
-				 break;
-			case LEFT:
-				 spriteBatch.draw(tex, isoX - frames * 1.6f - 16*(rows),  isoY - frames * 0.8f - 8*(rows), 64*frames, 64 * (kierunek.toInt() * 2)+64*rows, 64, 64);
-				 break;
-			case RIGHT:
-				 spriteBatch.draw(tex, isoX + frames * 1.6f + 16*(rows),  isoY + frames * 0.8f + 8*(rows), 64*frames, 64 * (kierunek.toInt() * 2)+64*rows, 64, 64);
-				 break;
-			case UP:
-				 spriteBatch.draw(tex, isoX - frames * 1.6f - 16*(rows),  isoY + frames * 0.8f + 8*(rows), 64*frames, 64 * (kierunek.toInt() * 2)+64*rows, 64, 64);
-				 break;
-		}
-		
-		if(timer > delay)
-		{
-			frames++;
-			timer = 0;
-		}
-		
-		if(rows==1 && frames==9)
-		{
-			
-			timer = 0;
-			frames = 0;
-			animation = 0;
-			rows --;
-			busy = false;
-			moved = true;
-			position.move(kierunek);
-		}
-		if(frames==9)
-		{
-			frames=0;
-			rows ++;
-		}
+    	if(!busy){
+        	float isoX = position.getIsoX(); // get starting position in screen coordinates
+        	float isoY = position.getIsoY();
+        	int sheetCols = 10;	// set the walking animation coordinates
+        	int sheetRows = 2;
+        	int sheetWidth = 64*sheetCols;
+        	int sheetHeight = 64*sheetRows;
+        	float duration = 0.5f;
+    		busy = true;
+    		// because sprites of walking animations for each direction are in one big file
+    		// we have to crop out the region contains only the frames we are interested in
+    		TextureRegion texture = new TextureRegion(tex_walk, 0, sheetHeight*kierunek.toInt(), sheetWidth, sheetHeight);
+    		//create animation and draw 1st frame
+    		currentAnimation = new AnimationWalk(texture, duration, sheetCols, sheetRows, isoX, isoY, kierunek);
+    		currentAnimation.draw(spriteBatch);
+    	}
+    	else {
+    		currentAnimation.draw(spriteBatch);
+    		if(currentAnimation.isFinished()){
+    			animation = 0;
+    			busy = false;
+    			moved = true;
+    			position.move(kierunek);        			
+    		}
+    	}
     }
     
     private void draw_atack(SpriteBatch spriteBatch, float time, Texture tex2)
     {
-    	int isoX = position.getIsoX();
-    	int isoY = position.getIsoY();
+    	float isoX = position.getIsoX();
+    	float isoY = position.getIsoY();
     	timer += time;
     	busy = true;
     	if(timer > delay)
@@ -188,36 +204,6 @@ public class Person {
     	{
     		animation = animation_number;
     	}
-    }
-    
-    public void draw(SpriteBatch spriteBatch, float time)
-    {
-    	int isoX = position.getIsoX();
-    	int isoY = position.getIsoY();
-    	if (animation == 0)
-        {
-    		spriteBatch.draw(tex_greet, isoX, isoY, 64*frames, 64*kierunek.toInt(), 64, 64);
-        }
-        else if (animation == 1)
-        {
-        	draw_standing_Animation(spriteBatch, time, tex_greet);
-        }
-        else if(animation == 2)
-        {
-        	draw_atack(spriteBatch, time, tex_atack);
-        }
-        else if(animation == 3)
-        {
-        	draw_death(spriteBatch, time, tex_death);
-        }
-        else if(animation == 4)
-        {
-        	draw_walk(spriteBatch, time, tex_walk);
-        }
-        else if(animation == 5)
-        {
-        	spriteBatch.draw(tex_death, isoX, isoY, 64*9, 64*kierunek.toInt(), 64, 64);
-        }
     }
     
     public void dispose()

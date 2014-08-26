@@ -281,8 +281,8 @@ private void draw_strzalki(SpriteBatch spriteBatch)
 	int correctorX = 8;
 	int correctorY = 8;
 	Vector2 nadglowa = new Vector2(24,48);
-	int isoX = position.getIsoX();
-	int isoY = position.getIsoY();
+	float isoX = position.getIsoX();
+	float isoY = position.getIsoY();
 	
 	if(strzalka == Direction.DOWN){spriteBatch.draw(strzalki[1], isoX+correctorX+nadglowa.x, isoY-correctorY-1+nadglowa.y);}
 	else{spriteBatch.draw(strzalki[1+4], isoX+correctorX+nadglowa.x, isoY-correctorY+nadglowa.y);}
