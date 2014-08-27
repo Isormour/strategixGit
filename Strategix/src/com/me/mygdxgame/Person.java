@@ -1,5 +1,7 @@
 package com.me.mygdxgame;
 
+import java.util.Map;
+
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
@@ -31,17 +33,16 @@ public class Person {
 	Texture tex_greet;
 	Texture tex_atack;
 	Texture tex_death;
-	Texture tex_walk;
 	
 	SpriteAnimation currentAnimation;
+	Map<String, SpriteAnimation> animationMap;
 	
-    Person(int x, int y, Texture greet, Texture atack, Texture death, Texture walk)
+    Person(int x, int y, Texture greet, Texture atack, Texture death)
     {
     	this.position = new BoardPosition(x, y);
     	this.tex_greet = greet;
     	this.tex_atack = atack;
     	this.tex_death = death;
-    	this.tex_walk = walk;
     }
 
     public void draw(SpriteBatch spriteBatch, float time)
@@ -66,7 +67,7 @@ public class Person {
         }
         else if(animation == 4)
         {
-        	draw_walk(spriteBatch);
+        	walkAnimationDraw(spriteBatch);
         }
         else if(animation == 5)
         {
@@ -111,33 +112,32 @@ public class Person {
     	}
     }
     
-    private void draw_walk(SpriteBatch spriteBatch)
+    /**
+     * Sets up the walking animation.
+     */
+    private void walkAnimationSetup() {
+    	float isoX = position.getIsoX();
+    	float isoY = position.getIsoY();
+    	//Create a new instance of desired animation at the current position
+    	currentAnimation = new PersonAnimationWalk(kierunek, isoX, isoY);
+    	
+    	//the finisher for walk is a little bit customized
+    	//because it needs to update position
+    	currentAnimation.setOnFinish( 
+    			new Finishable() {
+					public void finish() {
+						finishAnimation();
+		    			moved = true;
+		    			position.move(kierunek);        			
+					}
+				}
+    	);
+	}
+    
+    private void walkAnimationDraw(SpriteBatch spriteBatch)
     {
-    	if(!busy){
-        	float isoX = position.getIsoX(); // get starting position in screen coordinates
-        	float isoY = position.getIsoY();
-        	int sheetCols = 10;	// set the walking animation coordinates
-        	int sheetRows = 2;
-        	int sheetWidth = 64*sheetCols;
-        	int sheetHeight = 64*sheetRows;
-        	float duration = 0.5f;
-    		busy = true;
-    		// because sprites of walking animations for each direction are in one big file
-    		// we have to crop out the region contains only the frames we are interested in
-    		TextureRegion texture = new TextureRegion(tex_walk, 0, sheetHeight*kierunek.toInt(), sheetWidth, sheetHeight);
-    		//create animation and draw 1st frame
-    		currentAnimation = new AnimationWalk(texture, duration, sheetCols, sheetRows, isoX, isoY, kierunek);
-    		currentAnimation.draw(spriteBatch);
-    	}
-    	else {
-    		currentAnimation.draw(spriteBatch);
-    		if(currentAnimation.isFinished()){
-    			animation = 0;
-    			busy = false;
-    			moved = true;
-    			position.move(kierunek);        			
-    		}
-    	}
+    	if( currentAnimation == null )	walkAnimationSetup();
+   		currentAnimation.draw(spriteBatch);
     }
     
     private void draw_atack(SpriteBatch spriteBatch, float time, Texture tex2)
@@ -181,6 +181,15 @@ public class Person {
     		attacked = true;
     	}
     }
+
+    /**
+     * Common things to perform after finishing an animation
+     */
+    private void finishAnimation(){
+		currentAnimation = null;
+		animation = 0;
+		busy = false;
+    }
     
     // PUBLIC FUNCTIONS 
     public void endTurn()
@@ -211,7 +220,6 @@ public class Person {
     	tex_atack.dispose();
     	tex_death.dispose();
     	tex_greet.dispose();
-    	tex_walk.dispose();
     }
     
     

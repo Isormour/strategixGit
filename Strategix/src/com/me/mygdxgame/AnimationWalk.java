@@ -6,12 +6,15 @@ package com.me.mygdxgame;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 
 /**
- * Class that is used for walk animations (duh).
+ * Class that is used for movement animations (duh).
  * @author luk32
  *
  */
 public class AnimationWalk extends SpriteAnimation {
-	private Direction dir;
+	protected Direction dir;
+
+	public AnimationWalk( ) {	}
+
 	/**
 	 * Please refer to {@link SpriteAnimation} documentation for full information 
 	 * @param spriteSheet
@@ -43,7 +46,7 @@ public class AnimationWalk extends SpriteAnimation {
 	 * @param y
 	 * @param dir Movement direction
 	 */
-	public AnimationWalk(TextureRegion spriteSheet, float duration, int cols, int x, int y, Direction dir) {
+	public AnimationWalk(TextureRegion spriteSheet, float duration, int cols, float x, float y, Direction dir) {
 		super(spriteSheet, duration, cols, x, y);
 		this.dir = dir;
 	}
@@ -82,5 +85,14 @@ public class AnimationWalk extends SpriteAnimation {
 				movePosition( -1.6f * framesDelta(),  0.8f * framesDelta());
 				break;
 		}
+	}
+	
+	public Direction getDir() {
+		return dir;
+	}
+
+	public void setDir(Direction dir) {
+		tryChangeAnimation();
+		this.dir = dir;
 	}
 }

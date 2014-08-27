@@ -14,17 +14,25 @@ import com.badlogic.gdx.graphics.g2d.TextureRegion;
  * @author luk32
  */
 public class SpriteAnimation{
+	/// TODO failing to change sprite sheet should fail more grace fully
 	private float x;
 	private float y;
 	private float duration;
+	private Finishable onFinish = new Finishable() { public void finish() {} };
 
 	private TextureRegion[] frames;
 	private Animation animation;
 	private TextureRegion currentFrame;
 	private float time = 0f; // Time since start of animation. 
 	private int lastFrameIndex = 0;
+	private boolean isPrepared = false;
 
 	final private float fps = 60.0f;
+	
+	/**
+	 * Create an uninitialized object.
+	 */
+	public SpriteAnimation( ){}
 	
 	/**
 	 * An invocation that do not set position (x,y = 0,0) and assumes that frames do not span over multiple rows (rows=1) .
@@ -60,27 +68,27 @@ public class SpriteAnimation{
 	 * @param y Position at screen for drawing (y-coordinate).
 	 */
 	public SpriteAnimation( TextureRegion spriteSheet, float duration, int cols, int rows, float x, float y ) {
-		setPosition(x, y);
-		TextureRegion[][] tmp_frames;
-		tmp_frames = spriteSheet.split(spriteSheet.getRegionWidth()/cols, spriteSheet.getRegionHeight()/rows);
-		frames = flattenTextRegionArray(tmp_frames);
 		this.duration = duration;
-		animation = new Animation(duration/fps, frames);
+		setPosition(x, y);
+		setSpriteSheet(spriteSheet, cols, rows);
 		if( checkSurplusFrames() ){
 			Gdx.app.debug("Strategix", "Sprite Animation: Some frames of animation will be skipped by default with current settings.");
 		}
 	}
 	
 	/**
-	 * Updates current frame and draws it.
+	 * Updates current state and frame and draws it.
 	 * @param spriteBatch A sprite batch the animation frame will be drawn on.
 	 */
 	public void draw(SpriteBatch spriteBatch){
+		assert animation != null;
+		if(!isPrepared) prepareAnimation();
 		time += Gdx.graphics.getDeltaTime();
 		currentFrame = animation.getKeyFrame(time);
 		update();
 		spriteBatch.draw(currentFrame, this.x, this.y);
 		lastFrameIndex = animation.getKeyFrameIndex(time);
+		if(isFinished()) finish();
 	}
 	
 	/**
@@ -104,9 +112,29 @@ public class SpriteAnimation{
 	}
 	
 	public boolean isFinished(){
-		return animation.isAnimationFinished(time);
+		return animation == null || animation.isAnimationFinished(time);
 	}
 	
+	public void setSpriteSheet(TextureRegion spriteSheet, int cols){
+		setSpriteSheet(spriteSheet, cols, 1);
+	}
+	
+	public void setSpriteSheet(TextureRegion spriteSheet, int cols, int rows){
+		tryChangeAnimation();
+		TextureRegion[][] tmp_frames;
+		tmp_frames = spriteSheet.split(spriteSheet.getRegionWidth()/cols, spriteSheet.getRegionHeight()/rows);
+		frames = flattenTextRegionArray(tmp_frames);
+	}
+
+	public float getDuration() {
+		return duration;
+	}
+
+	public void setDuration(float duration) {
+		tryChangeAnimation();
+		this.duration = duration;
+	}
+
 	/**
 	 * Sets new position for the animation.
 	 * @param x
@@ -131,8 +159,34 @@ public class SpriteAnimation{
 	 * Used to update animation, like position, current frame, or anything.
 	 * Meant to be overridden for more advanced animations.
 	 */
-	public void update() {}
+	protected void update() {}
 	
+//	/**
+//	 * Called at the end of the constructor.
+//	 * Meant to be overridden by concrete subclasses for custom initialization.
+//	 */
+//	protected void create() {}
+	
+	/**
+	 * Called when the animation finishes.
+	 */
+	protected void finish() {
+		onFinish.finish();
+	}
+	
+	private void prepareAnimation(){
+		animation = new Animation(duration/fps, frames);
+		isPrepared = true;
+	}
+	
+	/**
+	 * Sets the object to call when the animation finishes
+	 * @param Callback that will get its `finish` method called
+	 */
+	public void setOnFinish(Finishable onFinish) {
+		this.onFinish = onFinish;
+	}
+
 	/**
 	 * Checks whether the number of frames is greater than needed.
 	 * E.g. If animation would have a duration of 0.3s @ 30fps, 10 frames would be needed/rendered/drawn.
@@ -143,6 +197,19 @@ public class SpriteAnimation{
 		return frames.length > fps/duration;
 	}
 	
+	/**
+	 * This function will check whether its safe to change some crucial aspects of animation (e.g. duration, sprite sheet). 
+	 * Its purpose is to fail somehow, when animation is running and change is impossible, or set a flag indicating the 
+	 * animation needs to be prepared again before drawing (a successful try implies animation will be changed).
+	 */
+	protected void tryChangeAnimation() {
+		if(isFinished()) {
+			isPrepared = false;
+		} else {
+			throw new RuntimeException("Cannot change requested property because the animation is running.");
+		}
+	}
+
 	/**
 	 * Flattens a 2D array of {@link TextureRegion} into a 1D array.
 	 * 

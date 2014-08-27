@@ -74,8 +74,7 @@ public class Strategix1 implements ApplicationListener {
 		tex_greet = new Texture(Gdx.files.internal("data/greet.png"));
 		tex_atack = new Texture(Gdx.files.internal("data/atack.png"));
 		tex_death = new Texture(Gdx.files.internal("data/death.png"));
-		tex_walk = new Texture(Gdx.files.internal("data/walk.png"));
-		tester = new Person(1, 1, tex_greet,tex_atack,tex_death,tex_walk);
+		tester = new Person(1, 1, tex_greet, tex_atack, tex_death);
 		
 		
 		// menu textures
