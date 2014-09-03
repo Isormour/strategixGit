@@ -1,5 +1,6 @@
 package com.me.mygdxgame;
 
+import java.util.HashMap;
 import java.util.Map;
 
 import javax.swing.plaf.basic.BasicSplitPaneUI.KeyboardDownRightHandler;
@@ -19,6 +20,8 @@ import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.sun.corba.se.impl.oa.poa.ActiveObjectMap.Key;
+import com.me.mygdxgame.Animation.AnimationAsset;
+import com.me.mygdxgame.Animation.AnimationAssetInternalFile;
 import com.me.mygdxgame.GameInputManager.*;
 
 public class Strategix1 implements ApplicationListener {
@@ -47,12 +50,12 @@ public class Strategix1 implements ApplicationListener {
 	Texture[] strzalki = new Texture[8];
 	
 	
-	
-	Map<Integer,Boolean> Keys_input;
+	Map<String, AnimationAsset> animationAssets = new HashMap<String, AnimationAsset>();
+	Map<Integer, Boolean> Keys_input;
 	
 	
 	@Override
-	public void create() {		
+	public void create() {
 		spriteBatch = new SpriteBatch();
 		font = new BitmapFont(false);
 		cam = new Camera(Gdx.graphics.getWidth(),Gdx.graphics.getHeight());
@@ -72,9 +75,7 @@ public class Strategix1 implements ApplicationListener {
 		GLTexture.setEnforcePotImages(false);
 		
 		tex_greet = new Texture(Gdx.files.internal("data/greet.png"));
-		tex_atack = new Texture(Gdx.files.internal("data/atack.png"));
-		tex_death = new Texture(Gdx.files.internal("data/death.png"));
-		tester = new Person(1, 1, tex_greet, tex_atack, tex_death);
+		tester = new Person(1, 1, tex_greet);
 		
 		
 		// menu textures
@@ -140,17 +141,19 @@ public class Strategix1 implements ApplicationListener {
 		//game input
 		if(Gdx.input.justTouched())
 		{
+			//TODO: Below code won't work, because input x and y seem to be arbitrary to the map.
+			//Probably, the screen coordinates should be adjusted to the map coordinates.
 			touch.x = Gdx.input.getX();
 			touch.y = Gdx.input.getY();
 			Rectangle tester_rect = new Rectangle(tester.position.getIsoX(),tester.position.getIsoY()+48, 64,64);
 			if(tester_rect.contains(touch))
 			{
-				if(!tester.busy){
-					tester.animation=1;
+				if(!tester.isBusy()){
+					tester.greet();
 				}
 			}
 		}
-		if(!tester.busy)
+		if(!tester.isBusy())
 		{
 			//if(Gdx.input.isKeyPressed(Keys.J))tester.set_animation(1);
 			//if(Gdx.input.isKeyPressed(Keys.H))tester.set_animation(2);
@@ -195,7 +198,7 @@ public class Strategix1 implements ApplicationListener {
 	font.draw(spriteBatch,"delay"+Float.toString(tester.delay) , 240, 100);
 	font.draw(spriteBatch,"marker time"+Float.toString(player1.time) , 300, 100);
 	font.draw(spriteBatch,"timer "+Float.toString(tester.timer) , 240, 80);
-	font.draw(spriteBatch,"busy "+Boolean.toString(tester.busy) , 240, 60);
+	font.draw(spriteBatch,"busy "+Boolean.toString(tester.isBusy()) , 240, 60);
 	font.draw(spriteBatch,"rows"+ Integer.toString(tester.rows) , 240, 40);
 
 	font.draw(spriteBatch,"zmiana kierunku WSAD", -150, 240);
