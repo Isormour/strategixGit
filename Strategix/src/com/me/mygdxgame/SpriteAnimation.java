@@ -4,6 +4,7 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.me.mygdxgame.Animation.AnimationAsset;
 
 /**
  * This class abstracts and encapsulates animations in game.
@@ -15,9 +16,11 @@ import com.badlogic.gdx.graphics.g2d.TextureRegion;
  */
 public class SpriteAnimation{
 	/// TODO failing to change sprite sheet should fail more grace fully
+	protected AnimationAsset asset;
+	protected float duration;
+
 	private float x;
 	private float y;
-	private float duration;
 	private Finishable onFinish = new Finishable() { public void finish() {} };
 
 	private TextureRegion[] frames;
@@ -32,7 +35,10 @@ public class SpriteAnimation{
 	/**
 	 * Create an uninitialized object.
 	 */
-	public SpriteAnimation( ){}
+	public SpriteAnimation( AnimationAsset asset ){
+		this.asset = asset;
+		this.duration = asset.getBaseDuration();
+	}
 	
 	/**
 	 * An invocation that do not set position (x,y = 0,0) and assumes that frames do not span over multiple rows (rows=1) .
@@ -68,9 +74,10 @@ public class SpriteAnimation{
 	 * @param y Position at screen for drawing (y-coordinate).
 	 */
 	public SpriteAnimation( TextureRegion spriteSheet, float duration, int cols, int rows, float x, float y ) {
+		this.asset = makeAsset(spriteSheet, duration, cols, rows);
 		this.duration = duration;
+		setSpriteSheet(spriteSheet);
 		setPosition(x, y);
-		setSpriteSheet(spriteSheet, cols, rows);
 		if( checkSurplusFrames() ){
 			Gdx.app.debug("Strategix", "Sprite Animation: Some frames of animation will be skipped by default with current settings.");
 		}
@@ -111,18 +118,18 @@ public class SpriteAnimation{
 		return animation.getKeyFrameIndex(time) - lastFrameIndex;
 	}
 	
+	public int getCurrentFrameIndex(){
+		return animation.getKeyFrameIndex(time);
+	}
+	
 	public boolean isFinished(){
 		return animation == null || animation.isAnimationFinished(time);
 	}
 	
-	public void setSpriteSheet(TextureRegion spriteSheet, int cols){
-		setSpriteSheet(spriteSheet, cols, 1);
-	}
-	
-	public void setSpriteSheet(TextureRegion spriteSheet, int cols, int rows){
+	public void setSpriteSheet(TextureRegion spriteSheet){
 		tryChangeAnimation();
 		TextureRegion[][] tmp_frames;
-		tmp_frames = spriteSheet.split(spriteSheet.getRegionWidth()/cols, spriteSheet.getRegionHeight()/rows);
+		tmp_frames = spriteSheet.split(asset.getFrameWidth(), asset.getFrameHeight());
 		frames = flattenTextRegionArray(tmp_frames);
 	}
 
@@ -208,6 +215,10 @@ public class SpriteAnimation{
 		} else {
 			throw new RuntimeException("Cannot change requested property because the animation is running.");
 		}
+	}
+	
+	protected static AnimationAsset makeAsset(TextureRegion spriteSheet, float duration, int cols, int rows){
+		return new AnimationAsset(spriteSheet, cols, rows, spriteSheet.getRegionWidth()/cols, spriteSheet.getRegionHeight()/rows, duration);
 	}
 
 	/**
