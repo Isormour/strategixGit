@@ -30,14 +30,14 @@ public int getY() {
 /**
  *  @return Value of x coordinate in isometric view. 
  */
-public int getIsoX(){
+public float getIsoX(){
 	return x*32 - y*32;
 }
 
 /**
  *  @return Value of y coordinate in isometric view. 
  */
-public int getIsoY(){
+public float getIsoY(){
 	return ((x*32 + y*32) / 2);
 }
 

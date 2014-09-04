@@ -42,6 +42,7 @@ float aTime=0;
 int aFrames=0;
 int pozycjaPointera = 1;
 SoftReference<Person> champion;
+Person currentChampion = null;
 Person Tester1;
 
 public Marker(int x, int y, Texture ground, Texture arrow, Texture[] strzalki, Texture Menu, Texture pointer, Texture attack, Texture tex_move)
@@ -59,7 +60,7 @@ public Marker(int x, int y, Texture ground, Texture arrow, Texture[] strzalki, T
 public void set_champ(Person champ)
 {
 	champion = new SoftReference<Person>(champ);
-	
+	currentChampion = champ;
 }
 
 public void dispose()
@@ -147,7 +148,7 @@ public void draw_Interface(SpriteBatch spriteBatch,float timer)
 
 private void draw_standing_animation(SpriteBatch spriteBatch, float timer, Texture tex2, float isoX, float isoY)
 {
-	time +=timer;
+	time += timer;
 	
 	if(time >delay)
 	{
@@ -198,8 +199,7 @@ public void approve(Person tester)
 	{// u¿ycie przycisku U na planszy
 		if(position.sameAs(tester.position))
 		{
-			tester.set_animation(1);
-			tester.busy = true;
+			tester.greet();
 			tester.selected = true;
 			set_champ(tester);
 			menuON = true;
@@ -217,7 +217,7 @@ public void approve(Person tester)
 	    {
 		case 1:
 			// atack
-			if(!tester.busy)
+			if(!tester.isBusy())
 			{ 	
 				if(!tester.attacked)
 				{
@@ -229,7 +229,7 @@ public void approve(Person tester)
 			break;
 		case 2:
 			if(!tester.moved){
-				if(!tester.busy)
+				if(!tester.isBusy())
 				{
 					moving = true;
 					menuON = false;
@@ -252,7 +252,7 @@ public void approve(Person tester)
 		moving = false;
 		tester.moved = true;
 		menuON = true;
-		tester.animation = 4;
+		currentChampion.move(sterownik);
 		return;
 	}
 	if(attacking)
@@ -261,7 +261,7 @@ public void approve(Person tester)
 		attacking = false;
 		tester.attacked = true;
 		menuON = true;
-		tester.animation = 2;
+		currentChampion.attack();
 		return;
 	}
 
@@ -281,8 +281,8 @@ private void draw_strzalki(SpriteBatch spriteBatch)
 	int correctorX = 8;
 	int correctorY = 8;
 	Vector2 nadglowa = new Vector2(24,48);
-	int isoX = position.getIsoX();
-	int isoY = position.getIsoY();
+	float isoX = position.getIsoX();
+	float isoY = position.getIsoY();
 	
 	if(strzalka == Direction.DOWN){spriteBatch.draw(strzalki[1], isoX+correctorX+nadglowa.x, isoY-correctorY-1+nadglowa.y);}
 	else{spriteBatch.draw(strzalki[1+4], isoX+correctorX+nadglowa.x, isoY-correctorY+nadglowa.y);}
