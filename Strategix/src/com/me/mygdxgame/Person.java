@@ -12,25 +12,15 @@ import com.me.mygdxgame.Animation.Person.AnimationPersonAttack;
 import com.me.mygdxgame.Animation.Person.AnimationPersonDeath;
 import com.me.mygdxgame.Animation.Person.AnimationPersonGreet;
 import com.me.mygdxgame.Animation.Person.AnimationPersonWalk;
-import com.sun.org.apache.xpath.internal.axes.WalkerFactory;
 
 
 public class Person {
 	BoardPosition position;
 	Direction kierunek = Direction.RIGHT;
-    int frames = 0;
-    int rows = 0;
- 
+
     boolean selected = false;
     boolean attacked = false;
     boolean moved = false;
-    
-    int attack_corrector = 0;
-    
-    float timer = 0;
-    float delay = 0.04f;
-    float atackcorr = 1;
-    float atack_dodatek;
     
 	SpriteAnimation currentAnimation;
 	Map<String, SpriteAnimation> animationMap;
@@ -44,13 +34,15 @@ public class Person {
 
     public void draw(SpriteBatch spriteBatch, float time)
     {
-    	//if(currentAnimation != null) currentAnimation.draw(spriteBatch);
+    	//TODO: Currently a default sprite is chosen to be 1st frame in the greeting texture
+    	// from the current direction. This should not be hardcoded. Perhaps there should be
+    	// a "standing" animation.
     	
     	float isoX = position.getIsoX();
     	float isoY = position.getIsoY();
     	if (currentAnimation == null)
         {
-    		spriteBatch.draw(tex_greet, isoX, isoY, 64*frames, 64*kierunek.toInt(), 64, 64);
+    		spriteBatch.draw(tex_greet, isoX, isoY, 0, 64*kierunek.toInt(), 64, 64);
         }
     	else {
     		currentAnimation.draw(spriteBatch);

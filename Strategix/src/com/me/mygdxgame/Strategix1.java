@@ -183,7 +183,6 @@ public class Strategix1 implements ApplicationListener {
 	spriteBatch.begin();
 	font.draw(spriteBatch,Boolean.toString(tester.selected) , 240, 240);
 	font.draw(spriteBatch,"time"+Float.toString(Gdx.app.getGraphics().getDeltaTime()) , 240, 220);
-	font.draw(spriteBatch,"frames "+Integer.toString(tester.frames) , 240, 200);
 	font.draw(spriteBatch,"kierunek "+tester.kierunek.toString() , 240, 180);
 	
 	font.draw(spriteBatch,
@@ -195,11 +194,8 @@ public class Strategix1 implements ApplicationListener {
 			", y: "+ Long.toString(player1.position.getY()),
 			240, 160);
 
-	font.draw(spriteBatch,"delay"+Float.toString(tester.delay) , 240, 100);
 	font.draw(spriteBatch,"marker time"+Float.toString(player1.time) , 300, 100);
-	font.draw(spriteBatch,"timer "+Float.toString(tester.timer) , 240, 80);
 	font.draw(spriteBatch,"busy "+Boolean.toString(tester.isBusy()) , 240, 60);
-	font.draw(spriteBatch,"rows"+ Integer.toString(tester.rows) , 240, 40);
 
 	font.draw(spriteBatch,"zmiana kierunku WSAD", -150, 240);
 	font.draw(spriteBatch,"U- potwierdzenie", -150, 220);
