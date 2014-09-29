@@ -50,6 +50,11 @@ public boolean sameAs(BoardPosition other) {
 	return (x == other.getX() && y == other.getY());
 }
 
+@Override
+	public String toString() {
+		return Integer.toString(x) + ", " + Integer.toString(y);
+	}
+
 /**
  * Changes the position on board according to {@link Direction} (by one field).
  * @param dir {@link Direction} in which the position should be moved.

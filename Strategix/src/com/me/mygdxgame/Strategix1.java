@@ -186,14 +186,8 @@ public class Strategix1 implements ApplicationListener {
 	font.draw(spriteBatch,"time"+Float.toString(Gdx.app.getGraphics().getDeltaTime()) , 240, 220);
 	font.draw(spriteBatch,"kierunek "+person.kierunek.toString() , 240, 180);
 	
-	font.draw(spriteBatch,
-			"tester x: "+ Long.toString(person.position.getX()) + 
-			", y: " + Long.toString(person.position.getY()), 
-			240, 140);
-	font.draw(spriteBatch,
-			"marker x: "+ Long.toString(player1.position.getX()) +
-			", y: "+ Long.toString(player1.position.getY()),
-			240, 160);
+	font.draw(spriteBatch, "tester: " + person.position, 240, 140);
+	font.draw(spriteBatch, "marker: "+ player1.position, 240, 160);
 
 	font.draw(spriteBatch,"marker time"+Float.toString(player1.time) , 300, 100);
 	font.draw(spriteBatch,"busy "+Boolean.toString(person.isBusy()) , 240, 60);
