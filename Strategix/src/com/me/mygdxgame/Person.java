@@ -17,7 +17,7 @@ import com.me.mygdxgame.Animation.AnimationDirection;
 
 public class Person {
 	BoardPosition position;
-	Direction kierunek = Direction.RIGHT;
+	Direction kierunek = Direction.DOWN;
 
     boolean selected = false;
     boolean attacked = false;
