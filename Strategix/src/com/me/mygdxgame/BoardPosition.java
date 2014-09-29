@@ -3,8 +3,6 @@
  */
 package com.me.mygdxgame;
 
-import javax.swing.text.Position;
-
 /**
  * Basic class implementing a position on board concept.
  * @author luk32
