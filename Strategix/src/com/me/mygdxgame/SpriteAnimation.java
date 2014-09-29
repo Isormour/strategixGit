@@ -27,7 +27,7 @@ public class SpriteAnimation{
 	private Animation animation;
 	private TextureRegion currentFrame;
 	private float time = 0f; // Time since start of animation. 
-	private int lastFrameIndex = 0;
+	private int previousFrameIndex = 0;
 	private boolean isPrepared = false;
 
 	final private float fps = 60.0f;
@@ -75,12 +75,17 @@ public class SpriteAnimation{
 	 */
 	public SpriteAnimation( TextureRegion spriteSheet, float duration, int cols, int rows, float x, float y ) {
 		this.asset = makeAsset(spriteSheet, duration, cols, rows);
-		this.duration = duration;
 		setSpriteSheet(spriteSheet);
 		setPosition(x, y);
 		if( checkSurplusFrames() ){
 			Gdx.app.debug("Strategix", "Sprite Animation: Some frames of animation will be skipped by default with current settings.");
 		}
+	}
+	
+	public void reset() {
+		isPrepared = false;
+		previousFrameIndex = 0;
+		time = 0;
 	}
 	
 	/**
@@ -94,7 +99,7 @@ public class SpriteAnimation{
 		currentFrame = animation.getKeyFrame(time);
 		update();
 		spriteBatch.draw(currentFrame, this.x, this.y);
-		lastFrameIndex = animation.getKeyFrameIndex(time);
+		previousFrameIndex = animation.getKeyFrameIndex(time);
 		if(isFinished()) finish();
 	}
 	
@@ -115,7 +120,7 @@ public class SpriteAnimation{
 	 * @return
 	 */
 	public int framesDelta(){
-		return animation.getKeyFrameIndex(time) - lastFrameIndex;
+		return animation.getKeyFrameIndex(time) - previousFrameIndex;
 	}
 	
 	public int getCurrentFrameIndex(){

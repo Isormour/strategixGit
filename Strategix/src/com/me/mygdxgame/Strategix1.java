@@ -19,6 +19,7 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.math.Vector3;
 import com.sun.corba.se.impl.oa.poa.ActiveObjectMap.Key;
 import com.me.mygdxgame.Animation.AnimationAsset;
 import com.me.mygdxgame.Animation.AnimationAssetInternalFile;
@@ -35,7 +36,7 @@ public class Strategix1 implements ApplicationListener {
 	Floor[][] map = new Floor[4][4];
 	boolean starter = true;
 	
-	Person tester;
+	Person person;
 	Texture attackSelector;
 	Texture moveSelector;
 	Texture tex_arrow;
@@ -73,10 +74,7 @@ public class Strategix1 implements ApplicationListener {
 		}
 		
 		GLTexture.setEnforcePotImages(false);
-		
-		tex_greet = new Texture(Gdx.files.internal("data/greet.png"));
-		tester = new Person(1, 1, tex_greet);
-		
+		person = new Person(1, 1);
 		
 		// menu textures
 		tex_menu = new Texture(Gdx.files.internal("data/menu/menu.png"));
@@ -119,7 +117,7 @@ public class Strategix1 implements ApplicationListener {
 				map[i][j].dispose();
 			}
 		}
-		tester.dispose();
+		person.dispose();
 		player1.dispose();
 		//kuniec dispose
 	}
@@ -129,6 +127,8 @@ public class Strategix1 implements ApplicationListener {
 		Gdx.gl.glClearColor(0.35f, 0.35f, 1f, 1.0f);
 		Gdx.gl.glClear(Gdx.gl10.GL_COLOR_BUFFER_BIT);
 		czasownik += Gdx.app.getGraphics().getDeltaTime();
+		spriteBatch.setProjectionMatrix(cam.camera.combined);
+		spriteBatch.begin();
 	
 		if(starter == true)
 		{
@@ -145,15 +145,18 @@ public class Strategix1 implements ApplicationListener {
 			//Probably, the screen coordinates should be adjusted to the map coordinates.
 			touch.x = Gdx.input.getX();
 			touch.y = Gdx.input.getY();
-			Rectangle tester_rect = new Rectangle(tester.position.getIsoX(),tester.position.getIsoY()+48, 64,64);
+			Vector3 touchpos = new Vector3(touch, 0);
+			cam.camera.unproject(touchpos);
+			font.draw(spriteBatch, "touch: " + touchpos.x + ", " + touchpos.y, 240, 20);
+			Rectangle tester_rect = new Rectangle(person.position.getIsoX(),person.position.getIsoY()+48, 64,64);
 			if(tester_rect.contains(touch))
 			{
-				if(!tester.isBusy()){
-					tester.greet();
+				if(!person.isBusy()){
+					person.greet();
 				}
 			}
 		}
-		if(!tester.isBusy())
+		if(!person.isBusy())
 		{
 			//if(Gdx.input.isKeyPressed(Keys.J))tester.set_animation(1);
 			//if(Gdx.input.isKeyPressed(Keys.H))tester.set_animation(2);
@@ -177,17 +180,15 @@ public class Strategix1 implements ApplicationListener {
 	if(KeyboardManager.is_Pressed(KeyboardManager.D))player1.move(Direction.RIGHT);
 	if(KeyboardManager.is_Pressed(KeyboardManager.U))
 	{
-		player1.approve(tester);
+		player1.approve(person);
 	}
-	spriteBatch.setProjectionMatrix(cam.camera.combined);
-	spriteBatch.begin();
-	font.draw(spriteBatch,Boolean.toString(tester.selected) , 240, 240);
+	font.draw(spriteBatch,Boolean.toString(person.selected) , 240, 240);
 	font.draw(spriteBatch,"time"+Float.toString(Gdx.app.getGraphics().getDeltaTime()) , 240, 220);
-	font.draw(spriteBatch,"kierunek "+tester.kierunek.toString() , 240, 180);
+	font.draw(spriteBatch,"kierunek "+person.kierunek.toString() , 240, 180);
 	
 	font.draw(spriteBatch,
-			"tester x: "+ Long.toString(tester.position.getX()) + 
-			", y: " + Long.toString(tester.position.getY()), 
+			"tester x: "+ Long.toString(person.position.getX()) + 
+			", y: " + Long.toString(person.position.getY()), 
 			240, 140);
 	font.draw(spriteBatch,
 			"marker x: "+ Long.toString(player1.position.getX()) +
@@ -195,7 +196,7 @@ public class Strategix1 implements ApplicationListener {
 			240, 160);
 
 	font.draw(spriteBatch,"marker time"+Float.toString(player1.time) , 300, 100);
-	font.draw(spriteBatch,"busy "+Boolean.toString(tester.isBusy()) , 240, 60);
+	font.draw(spriteBatch,"busy "+Boolean.toString(person.isBusy()) , 240, 60);
 
 	font.draw(spriteBatch,"zmiana kierunku WSAD", -150, 240);
 	font.draw(spriteBatch,"U- potwierdzenie", -150, 220);
@@ -212,7 +213,7 @@ public class Strategix1 implements ApplicationListener {
 	}
 	
 	player1.draw(spriteBatch, Gdx.app.getGraphics().getDeltaTime());
-	tester.draw(spriteBatch,  Gdx.app.getGraphics().getDeltaTime());
+	person.draw(spriteBatch, Gdx.app.getGraphics().getDeltaTime());
 	player1.draw_Interface(spriteBatch, Gdx.app.getGraphics().getDeltaTime());
 	spriteBatch.end();
 	//input update

@@ -1,17 +1,18 @@
 package com.me.mygdxgame;
 
+import java.util.HashMap;
 import java.util.Map;
 
-import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.me.mygdxgame.Animation.AnimationAsset;
+import com.me.mygdxgame.Animation.AnimationAssetInternalFile;
 import com.me.mygdxgame.Animation.Person.AnimationPersonAssets;
 import com.me.mygdxgame.Animation.Person.AnimationPersonAttack;
 import com.me.mygdxgame.Animation.Person.AnimationPersonDeath;
 import com.me.mygdxgame.Animation.Person.AnimationPersonGreet;
 import com.me.mygdxgame.Animation.Person.AnimationPersonWalk;
+import com.me.mygdxgame.Animation.Person.AnimationPerson;
+import com.me.mygdxgame.Animation.AnimationDirection;
 
 
 public class Person {
@@ -21,62 +22,48 @@ public class Person {
     boolean selected = false;
     boolean attacked = false;
     boolean moved = false;
+    boolean performingAction = false;
     
-	SpriteAnimation currentAnimation;
-	Map<String, SpriteAnimation> animationMap;
-	Texture tex_greet;
+    AnimationDirection currentAnimation;
+	Map<String, AnimationDirection> animationMap;
 	
-    Person(int x, int y, Texture greet)
+    Person(int x, int y)
     {
     	this.position = new BoardPosition(x, y);
-    	this.tex_greet = greet;
+    	this.animationMap = new HashMap<String, AnimationDirection>();
+    	this.loadAnimations();
+    	setCurrentAnimation("idle");
     }
 
+    private void loadAnimations(){
+    	AnimationAsset asset;
+    	asset = AnimationPersonAssets.getInstance().getAnimationAsset("attack");
+    	this.animationMap.put("attack", new AnimationPersonAttack(asset));
+    	asset = AnimationPersonAssets.getInstance().getAnimationAsset("death");
+    	this.animationMap.put("death", new AnimationPersonDeath(asset));
+    	asset = AnimationPersonAssets.getInstance().getAnimationAsset("greet");
+    	this.animationMap.put("greet", new AnimationPersonGreet(asset));
+    	asset = AnimationPersonAssets.getInstance().getAnimationAsset("walk");
+    	AnimationDirection walk = new AnimationPersonWalk( AnimationPersonAssets.getInstance().getAnimationAsset("walk"));
+    	this.animationMap.put("walk", walk);
+    	
+    	//TODO: "Idle" animation is a hardcoded 1st frame of greet. 
+    	asset = new AnimationAssetInternalFile("data/greet.png", 1, 1, 64, 64, 0.01f);
+    	AnimationDirection idle = new AnimationPerson(asset);
+    	this.animationMap.put("idle", idle);
+    }
+    
     public void draw(SpriteBatch spriteBatch, float time)
     {
-    	//TODO: Currently a default sprite is chosen to be 1st frame in the greeting texture
-    	// from the current direction. This should not be hardcoded. Perhaps there should be
-    	// a "standing" animation.
-    	
-    	float isoX = position.getIsoX();
-    	float isoY = position.getIsoY();
-    	if (currentAnimation == null)
-        {
-    		spriteBatch.draw(tex_greet, isoX, isoY, 0, 64*kierunek.toInt(), 64, 64);
-        }
-    	else {
-    		currentAnimation.draw(spriteBatch);
-        	if (currentAnimation.isFinished()) finishAnimation();
-    	}
-
+		currentAnimation.draw(spriteBatch);
+    	if (currentAnimation.isFinished()) finishAnimation();
     }
-
-    /**
-     * Sets up the walking animation.
-     */
-    private void walkAnimationSetup(final Direction dir) {
-    	float isoX = position.getIsoX();
-    	float isoY = position.getIsoY();
-    	//Create a new instance of desired animation at the current position
-    	currentAnimation = new AnimationPersonWalk( AnimationPersonAssets.getInstance().getAnimationAsset("walk"), dir, isoX, isoY);
-    	
-    	//the finisher for walk is a little bit customized
-    	//because it needs to update position
-    	currentAnimation.setOnFinish( 
-    			new Finishable() {
-					public void finish() {
-		    			moved = true;
-		    			position.move(dir);        			
-					}
-				}
-    	);
-	}
     
     /**
      * Common things to perform after finishing an animation
      */
     private void finishAnimation(){
-		currentAnimation = null;
+		performingAction = false;
     }
     
     // PUBLIC FUNCTIONS 
@@ -88,45 +75,50 @@ public class Person {
     
     public void set_kierunek(Direction kierunek)
     {
-    	if( isBusy() )
+    	if( !isBusy() )
     	{
     		this.kierunek = kierunek;
     	}
     }
     
-    public void attack(){
+    /**
+     * Sets up animation and makes it `currentAnimation`.
+     * @param name The name of 
+     */
+    protected void setCurrentAnimation(String name){
        	float isoX = position.getIsoX();
     	float isoY = position.getIsoY();
-    	AnimationAsset asset = AnimationPersonAssets.getInstance().getAnimationAsset("attack");
-    	currentAnimation = new AnimationPersonAttack(asset, kierunek, isoX, isoY);
+    	currentAnimation = animationMap.get(name);
+    	currentAnimation.setPosition(isoX, isoY);
+    	currentAnimation.setDir(kierunek);
+    	currentAnimation.reset();
+    	performingAction = true;
+    }
+    
+    public void attack(){
+    	setCurrentAnimation("attack");
     	attacked = true;
     }
     
     public void move(Direction dir) {
-    	walkAnimationSetup(dir);
+    	setCurrentAnimation("walk");
+    	position.move(dir);
+    	moved = true;
 	}
     
     public void kill(){
-       	float isoX = position.getIsoX();
-    	float isoY = position.getIsoY();
-    	AnimationAsset asset = AnimationPersonAssets.getInstance().getAnimationAsset("kill");
-    	currentAnimation = new AnimationPersonDeath(asset, kierunek, isoX, isoY);
+    	setCurrentAnimation("kill");
     }
     
     public void greet(){
-       	float isoX = position.getIsoX();
-    	float isoY = position.getIsoY();
-    	AnimationAsset asset = AnimationPersonAssets.getInstance().getAnimationAsset("greet");
-    	currentAnimation = new AnimationPersonGreet(asset, kierunek, isoX, isoY);
+    	setCurrentAnimation("greet");
     }
     
     public void dispose() {}
     
     public boolean isBusy(){
-    	return currentAnimation != null;
+    	return performingAction;
     }
     
 }
     	
-
-
