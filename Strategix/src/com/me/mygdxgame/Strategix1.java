@@ -3,27 +3,20 @@ package com.me.mygdxgame;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.swing.plaf.basic.BasicSplitPaneUI.KeyboardDownRightHandler;
-
 import com.badlogic.gdx.ApplicationListener;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input.Keys;
 import com.badlogic.gdx.graphics.GL10;
 import com.badlogic.gdx.graphics.GLTexture;
-import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.graphics.Texture.TextureFilter;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
-import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
-import com.sun.corba.se.impl.oa.poa.ActiveObjectMap.Key;
 import com.me.mygdxgame.Animation.AnimationAsset;
-import com.me.mygdxgame.Animation.AnimationAssetInternalFile;
-import com.me.mygdxgame.GameInputManager.*;
+import com.me.mygdxgame.GameInputManager.GameInputManager;
+import com.me.mygdxgame.GameInputManager.KeyboardManager;
 
 public class Strategix1 implements ApplicationListener {
     SpriteBatch spriteBatch;
@@ -125,16 +118,16 @@ public class Strategix1 implements ApplicationListener {
 	@Override
 	public void render() {
 		Gdx.gl.glClearColor(0.35f, 0.35f, 1f, 1.0f);
-		Gdx.gl.glClear(Gdx.gl10.GL_COLOR_BUFFER_BIT);
+		Gdx.gl.glClear(GL10.GL_COLOR_BUFFER_BIT);
 		czasownik += Gdx.app.getGraphics().getDeltaTime();
-		spriteBatch.setProjectionMatrix(cam.camera.combined);
+		spriteBatch.setProjectionMatrix(cam.combined);
 		spriteBatch.begin();
 	
 		if(starter == true)
 		{
-			cam.ruchscreena(Direction.DOWN, 500);
-			cam.ruchscreena(Direction.LEFT, 600);
-			cam.camera.update();
+			cam.translate(Direction.UP, 150);
+			cam.translate(Direction.RIGHT, 200);
+			cam.update();
 			starter = false;
 		}
 	
@@ -146,33 +139,25 @@ public class Strategix1 implements ApplicationListener {
 			touch.x = Gdx.input.getX();
 			touch.y = Gdx.input.getY();
 			Vector3 touchpos = new Vector3(touch, 0);
-			cam.camera.unproject(touchpos);
-			font.draw(spriteBatch, "touch: " + touchpos.x + ", " + touchpos.y, 240, 20);
-			Rectangle tester_rect = new Rectangle(person.position.getIsoX(),person.position.getIsoY()+48, 64,64);
-			if(tester_rect.contains(touch))
+			
+			cam.unproject(touchpos);
+			touch.x = touchpos.x;
+			touch.y = touchpos.y;
+			Rectangle tester_rect = new Rectangle(person.position.getIsoX(),person.position.getIsoY(), 64,64);
+			if(tester_rect.contains(touchpos.x, touchpos.y))
 			{
 				if(!person.isBusy()){
 					person.greet();
 				}
 			}
 		}
-		if(!person.isBusy())
-		{
-			//if(Gdx.input.isKeyPressed(Keys.J))tester.set_animation(1);
-			//if(Gdx.input.isKeyPressed(Keys.H))tester.set_animation(2);
-			//if(Gdx.input.isKeyPressed(Keys.K))tester.set_animation(3);
-			//if(Gdx.input.isKeyPressed(Keys.L))tester.set_animation(4);
-		}
-		
-		
 		//game input
 	if(Gdx.input.isKeyPressed(Keys.CONTROL_LEFT))
 	{
-		
-		if(Gdx.input.isKeyPressed(Keys.W))cam.ruchscreena(Direction.UP);
-		if(Gdx.input.isKeyPressed(Keys.S))cam.ruchscreena(Direction.DOWN);
-		if(Gdx.input.isKeyPressed(Keys.A))cam.ruchscreena(Direction.LEFT);
-		if(Gdx.input.isKeyPressed(Keys.D))cam.ruchscreena(Direction.RIGHT);
+		if(Gdx.input.isKeyPressed(Keys.W))cam.translate(Direction.UP);
+		if(Gdx.input.isKeyPressed(Keys.S))cam.translate(Direction.DOWN);
+		if(Gdx.input.isKeyPressed(Keys.A))cam.translate(Direction.LEFT);
+		if(Gdx.input.isKeyPressed(Keys.D))cam.translate(Direction.RIGHT);
 	}
 	if(KeyboardManager.is_Pressed(KeyboardManager.W))player1.move(Direction.UP);
 	if(KeyboardManager.is_Pressed(KeyboardManager.S))player1.move(Direction.DOWN);
@@ -182,6 +167,7 @@ public class Strategix1 implements ApplicationListener {
 	{
 		player1.approve(person);
 	}
+	font.draw(spriteBatch, "touch: " + touch.x + ", " + touch.y, 240, 20);
 	font.draw(spriteBatch,Boolean.toString(person.selected) , 240, 240);
 	font.draw(spriteBatch,"time"+Float.toString(Gdx.app.getGraphics().getDeltaTime()) , 240, 220);
 	font.draw(spriteBatch,"kierunek "+person.kierunek.toString() , 240, 180);
@@ -216,7 +202,9 @@ public class Strategix1 implements ApplicationListener {
 	
 	@Override
 	public void resize(int width, int height) {
-		cam.camera.setToOrtho(false, width, height);
+		cam.viewportWidth = Gdx.graphics.getWidth();
+		cam.viewportHeight = Gdx.graphics.getHeight();
+		cam.update();
 	}
 
 	@Override

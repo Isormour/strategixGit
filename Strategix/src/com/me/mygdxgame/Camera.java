@@ -1,20 +1,13 @@
 package com.me.mygdxgame;
 
-import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.OrthographicCamera;
-import com.badlogic.gdx.math.Vector3;
 
-public class Camera {
-	OrthographicCamera camera;
-	Vector3 position;
-	boolean updated = false;
+public class Camera extends OrthographicCamera{
+	protected float moveSpeed = 2;
 	
-	Camera(float width,float height)
+	Camera(float width, float height)
 	{
-		camera = new OrthographicCamera(width, height);
-		position = new Vector3(width, height, 0);
-        camera.update();
-        camera.apply(Gdx.gl10);
+		super(width, height);
 	}
 	
 	/**
@@ -22,33 +15,32 @@ public class Camera {
 	 * @param dir Direction of movement.
 	 * @param pixels Number of pixels for displacement.
 	 */
-	public void ruchscreena(Direction dir, int pixels) {
+	public void translate(Direction dir, float pixels) {
         switch (dir)
         {
             case UP:
-            	position.y += pixels;
+            	this.translate(0, pixels);
                 break;
             case DOWN:
-            	position.y -= pixels;
+            	this.translate(0, -pixels);
                 break;
             case RIGHT:
-            	position.x += pixels;
+            	this.translate(pixels, 0);
                 break;
             case LEFT:
-            	position.x -= pixels;
+            	this.translate(-pixels, 0);
                 break;
         }
-        camera.position.set(position);
-        camera.update();
-        camera.apply(Gdx.gl10);
+        this.update();
 	}
 	
 	/**
 	 * Moves the camera by a pixel in a given direction.
 	 * @param pixels Number of pixels for displacement.
 	 */	
-	public void ruchscreena(Direction dir)
+	public void translate(Direction dir)
     {
-		this.ruchscreena(dir, 1);
-    }	
+		this.translate(dir, moveSpeed);
+    }
+	
 }
