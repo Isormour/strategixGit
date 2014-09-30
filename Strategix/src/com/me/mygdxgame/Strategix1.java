@@ -6,14 +6,14 @@ import java.util.Map;
 import com.badlogic.gdx.ApplicationListener;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input.Keys;
-import com.badlogic.gdx.graphics.GL10;
-import com.badlogic.gdx.graphics.GLTexture;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.utils.viewport.ScreenViewport;
+import com.badlogic.gdx.utils.viewport.Viewport;
 import com.me.mygdxgame.Animation.AnimationAsset;
 import com.me.mygdxgame.GameInputManager.GameInputManager;
 import com.me.mygdxgame.GameInputManager.KeyboardManager;
@@ -22,6 +22,7 @@ public class Strategix1 implements ApplicationListener {
     SpriteBatch spriteBatch;
 	BitmapFont font;
 	Camera cam;
+	Viewport viewport;
 	Vector2 touch;
 	float czasownik;
 	Marker player1;
@@ -53,6 +54,7 @@ public class Strategix1 implements ApplicationListener {
 		spriteBatch = new SpriteBatch();
 		font = new BitmapFont(false);
 		cam = new Camera(Gdx.graphics.getWidth(),Gdx.graphics.getHeight());
+		viewport = new ScreenViewport(cam);
 		tex_Floor = new Texture(Gdx.files.internal("data/rect64.png"));
 		touch = new Vector2();
 		czasownik = Gdx.app.getGraphics().getDeltaTime();
@@ -65,8 +67,6 @@ public class Strategix1 implements ApplicationListener {
 				map[i][j]= new Floor(i, j, tex_Floor);
 			}
 		}
-		
-		GLTexture.setEnforcePotImages(false);
 		person = new Person(1, 1);
 		
 		// menu textures
@@ -118,7 +118,7 @@ public class Strategix1 implements ApplicationListener {
 	@Override
 	public void render() {
 		Gdx.gl.glClearColor(0.35f, 0.35f, 1f, 1.0f);
-		Gdx.gl.glClear(GL10.GL_COLOR_BUFFER_BIT);
+		Gdx.gl.glClear(Gdx.gl.GL_COLOR_BUFFER_BIT);
 		czasownik += Gdx.app.getGraphics().getDeltaTime();
 		spriteBatch.setProjectionMatrix(cam.combined);
 		spriteBatch.begin();
@@ -168,6 +168,7 @@ public class Strategix1 implements ApplicationListener {
 		player1.approve(person);
 	}
 	font.draw(spriteBatch, "touch: " + touch.x + ", " + touch.y, 240, 20);
+	font.draw(spriteBatch, "res: " + viewport.getWorldHeight() + ", " + viewport.getWorldWidth(), 240, 40);
 	font.draw(spriteBatch,Boolean.toString(person.selected) , 240, 240);
 	font.draw(spriteBatch,"time"+Float.toString(Gdx.app.getGraphics().getDeltaTime()) , 240, 220);
 	font.draw(spriteBatch,"kierunek "+person.kierunek.toString() , 240, 180);
@@ -179,10 +180,7 @@ public class Strategix1 implements ApplicationListener {
 	font.draw(spriteBatch,"busy "+Boolean.toString(person.isBusy()) , 240, 60);
 
 	font.draw(spriteBatch,"zmiana kierunku WSAD", -150, 240);
-	font.draw(spriteBatch,"U- potwierdzenie", -150, 220);
-	font.draw(spriteBatch,"J-powitanie ", -150, 200);
-	font.draw(spriteBatch,"K-smierc ", -150, 180);
-	font.draw(spriteBatch,"L-przemieszczanie ", -150, 160);
+	font.draw(spriteBatch,"U - potwierdzenie", -150, 220);
 	
 	for(int i=map.length-1;i>=0;i--)
 	{
@@ -202,9 +200,8 @@ public class Strategix1 implements ApplicationListener {
 	
 	@Override
 	public void resize(int width, int height) {
-		cam.viewportWidth = Gdx.graphics.getWidth();
-		cam.viewportHeight = Gdx.graphics.getHeight();
-		cam.update();
+		viewport.update(width, height);
+		//cam.update();
 	}
 
 	@Override
